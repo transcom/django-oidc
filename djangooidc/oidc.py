@@ -58,7 +58,7 @@ class Client(oic.Client):
         logger.info("URL: %s" % url)
         logger.debug("ht_args: %s" % ht_args)
 
-        resp = HttpResponseRedirect(url)
+        resp = HttpResponseRedirect(unicode(url))
         if ht_args:
             for key, value in ht_args.items():
                 resp[key] = value
