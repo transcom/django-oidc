@@ -15,10 +15,9 @@ from django.contrib.auth import logout as auth_logout, authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import login as auth_login_view, logout as auth_logout_view
 from django.shortcuts import redirect, render_to_response, resolve_url
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django import forms
 from django.template import RequestContext
-from oic.oic.message import IdToken
 
 from djangooidc.oidc import OIDCClients, OIDCError
 
@@ -103,7 +102,7 @@ def authz_cb(request):
 
 
 def logout(request, next_page=None):
-    if not "op" in request.session.keys():
+    if "op" not in request.session.keys():
         return auth_logout_view(request, next_page)
 
     client = CLIENTS[request.session["op"]]
@@ -150,11 +149,9 @@ def logout(request, next_page=None):
             'id_token_hint': request.session['access_token'],
             'state': request.session['state'],
         }
-        request_args.update(extra_args) # should include the post_logout_redirect_uri
+        request_args.update(extra_args)  # should include the post_logout_redirect_uri
 
-        # id_token iss is the token issuer, the url of the issuing server
-        # the full url works for the BOSS OIDC Provider, not tested on any other provider
-        url = request.session['id_token']['iss'] + "/protocol/openid-connect/logout"
+        url = client.provider_info['end_session_endpoint']
         url += "?" + urlencode(request_args)
         return HttpResponseRedirect(url)
 
@@ -181,6 +178,6 @@ def logout(request, next_page=None):
 
 
 def logout_cb(request):
-    """ Simple redirection view: after logout, just redirect to a parameter value inside the session """
+    """Simple redirection view: after logout, just redirect to a parameter value inside the session"""
     next = request.session["next"] if "next" in request.session.keys() else "/"
     return redirect(next)
