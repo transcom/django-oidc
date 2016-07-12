@@ -1,6 +1,8 @@
 # coding: utf-8
+import logging
 
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from oic.exception import MissingAttribute
 from oic import oic, rndstr
 from oic.oauth2 import ErrorResponse
@@ -10,9 +12,6 @@ from oic.oic import AuthorizationRequest
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 
 __author__ = 'roland'
-
-import logging
-from django.http import HttpResponseRedirect
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +66,7 @@ class Client(oic.Client):
 
     def callback(self, response, session):
         """
-        This is the method that should be called when an AuthN response has been
-        received from the OP.
+        Should be called when an AuthN response has been received from the OP.
 
         :param response: The URL returned by the OP
         :return:
@@ -173,7 +171,6 @@ class OIDCClients(object):
             "provider_info"]
         :return: client instance
         """
-
         _key_set = set(kwargs.keys())
         args = {}
         for param in ["verify_ssl"]:
@@ -210,23 +207,27 @@ class OIDCClients(object):
             # Find the service that provides information about the OP
             issuer = client.wf.discovery_query(userid)
             # Gather OP information
-            _ = client.provider_config(issuer)
+            client.provider_config(issuer)
             # register the client
-            _ = client.register(client.provider_info["registration_endpoint"],
-                                **kwargs["client_info"])
+            client.register(
+                client.provider_info["registration_endpoint"],
+                **kwargs["client_info"]
+            )
         elif _key_set == set(["client_info", "srv_discovery_url"]):
             # Ship the webfinger part
             # Gather OP information
-            _ = client.provider_config(kwargs["srv_discovery_url"])
+            client.provider_config(kwargs["srv_discovery_url"])
             # register the client
-            _ = client.register(client.provider_info["registration_endpoint"],
-                                **kwargs["client_info"])
+            client.register(
+                client.provider_info["registration_endpoint"],
+                **kwargs["client_info"]
+            )
         elif _key_set == set(["provider_info", "client_info"]):
             client.handle_provider_config(
                 ProviderConfigurationResponse(**kwargs["provider_info"]),
                 kwargs["provider_info"]["issuer"])
-            _ = client.register(client.provider_info["registration_endpoint"],
-                                **kwargs["client_info"])
+            client.register(client.provider_info["registration_endpoint"],
+                            **kwargs["client_info"])
         elif _key_set == set(["provider_info", "client_registration"]):
             client.handle_provider_config(
                 ProviderConfigurationResponse(**kwargs["provider_info"]),
@@ -234,9 +235,17 @@ class OIDCClients(object):
             client.store_registration_info(RegistrationResponse(
                 **kwargs["client_registration"]))
         elif _key_set == set(["srv_discovery_url", "client_registration"]):
-            _ = client.provider_config(kwargs["srv_discovery_url"])
-            client.store_registration_info(RegistrationResponse(
-                **kwargs["client_registration"]))
+            try:
+                client.provider_config(kwargs["srv_discovery_url"])
+                client.store_registration_info(
+                    RegistrationResponse(**kwargs["client_registration"])
+                )
+            except Exception as e:
+                logger.error(
+                    "Provider info discovery failed for %s - assume backend unworkable",
+                    kwargs["srv_discovery_url"]
+                )
+                logger.exception(e)
         else:
             raise Exception("Configuration error ?")
 
@@ -253,7 +262,7 @@ class OIDCClients(object):
             # Gather OP information
             _pcr = client.provider_config(issuer)
             # register the client
-            _ = client.register(_pcr["registration_endpoint"], **self.config.OIDC_DYNAMIC_CLIENT_REGISTRATION_DATA)
+            client.register(_pcr["registration_endpoint"], **self.config.OIDC_DYNAMIC_CLIENT_REGISTRATION_DATA)
             try:
                 client.behaviour.update(**self.config.OIDC_DEFAULT_BEHAVIOUR)
             except KeyError:
@@ -275,4 +284,3 @@ class OIDCClients(object):
 
     def keys(self):
         return self.client.keys()
-
