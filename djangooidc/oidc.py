@@ -112,6 +112,8 @@ class Client(oic.Client):
             if isinstance(atresp, ErrorResponse):
                 raise OIDCError("Invalid response %s." % atresp["error"])
             session['id_token'] = atresp['id_token']._dict
+            if session['id_token']:
+                session['id_token_raw'] = getattr(self, 'id_token_raw', None)
             session['access_token'] = atresp['access_token']
             try:
                 session['refresh_token'] = atresp['refresh_token']
@@ -128,6 +130,20 @@ class Client(oic.Client):
         logger.debug("UserInfo: %s" % inforesp)
 
         return userinfo
+
+    def store_response(self, resp, info):
+        # makes raw ID token available for internal means
+        try:
+            import json
+            from oic.oic.message import AccessTokenResponse
+            if isinstance(resp, AccessTokenResponse):
+                info = json.loads(info)
+                self.id_token_raw = info['id_token']
+        except Exception as e:
+            # fail silently if something is wrong
+            logger.exception(e)
+
+        super(Client, self).store_response(resp, info)
 
 
 class OIDCClients(object):
