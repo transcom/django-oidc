@@ -94,7 +94,7 @@ def authz_cb(request):
         user = authenticate(**userinfo)
         if user:
             login(request, user)
-            return redirect(request.session["next"])
+            return redirect(request.session.get("next", "/"))
         else:
             raise Exception('this login is not valid in this application')
     except OIDCError as e:
