@@ -102,17 +102,19 @@ def authz_cb(request):
 
 
 def logout(request, next_page=None):
-    if "op" not in request.session.keys():
-        return auth_logout_view(request, next_page)
-
-    client = CLIENTS[request.session["op"]]
-
     # User is by default NOT redirected to the app - it stays on an OP page after logout.
     # Here we determine if a redirection to the app was asked for and is possible.
     if next_page is None and "next" in request.GET.keys():
         next_page = request.GET['next']
     if next_page is None and "next" in request.session.keys():
         next_page = request.session['next']
+    if next_page is None:
+        next_page = getattr(settings, 'LOGOUT_REDIRECT_URL', None)
+
+    if "op" not in request.session.keys():
+        return auth_logout_view(request, next_page)
+    client = CLIENTS[request.session["op"]]
+
     extra_args = {}
     if "post_logout_redirect_uris" in client.registration_response.keys() and len(
             client.registration_response["post_logout_redirect_uris"]) > 0:
