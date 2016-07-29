@@ -109,7 +109,7 @@ def authz_cb(request):
             raise callback_result
         userinfo = callback_result
         request.session["userinfo"] = userinfo
-        user = authenticate(**userinfo)
+        user = authenticate(request=request, **userinfo)
         if user:
             login(request, user)
             return redirect(request.session.get("next", "/"))
