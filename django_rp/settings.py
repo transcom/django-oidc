@@ -218,16 +218,16 @@ OIDC_DEFAULT_BEHAVIOUR = {
 # The keys in this dictionary are the OPs (OpenID Providers) short user friendly name not the issuer (iss) name.
 OIDC_PROVIDERS = {
     # Test OP - webfinger supported on non-standard URL, no client self registration.
-    "Azure Active Directory": {
-        "srv_discovery_url": "https://sts.windows.net/9019caa7-f3ba-4261-8b4f-9162bdbe8cd1/",
-        "behaviour": OIDC_DEFAULT_BEHAVIOUR,
-        "client_registration": {
-            "client_id": "0d21f6d8-796f-4879-a2e1-314ddfcfb737",
-            "client_secret": "6hzvhNTsHPvTiUH/GUHVsFDt8b0BajZNox/iFI7iVJ8=",
-            "redirect_uris": ["http://localhost:8000/openid/callback/login/"],
-            "post_logout_redirect_uris": ["http://localhost:8000/openid/callback/logout/"],
-        }
-    },
+    # "Azure Active Directory": {
+    #     "srv_discovery_url": "https://sts.windows.net/9019caa7-f3ba-4261-8b4f-9162bdbe8cd1/",
+    #     "behaviour": OIDC_DEFAULT_BEHAVIOUR,
+    #     "client_registration": {
+    #         "client_id": "0d21f6d8-796f-4879-a2e1-314ddfcfb737",
+    #         "client_secret": "6hzvhNTsHPvTiUH/GUHVsFDt8b0BajZNox/iFI7iVJ8=",
+    #         "redirect_uris": ["http://localhost:8000/openid/callback/login/"],
+    #         "post_logout_redirect_uris": ["http://localhost:8000/openid/callback/logout/"],
+    #     }
+    # },
     # # No webfinger support, but OP information lookup and client registration
     # "xenosmilus": {
     # "srv_discovery_url": "https://xenosmilus2.umdc.umu.se:8091/",
