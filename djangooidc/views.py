@@ -89,7 +89,10 @@ def authz_cb(request):
 
     try:
         query = parse_qs(request.META['QUERY_STRING'])
-        userinfo = client.callback(query, request.session)
+        callback_result = client.callback(query, request.session)
+        if isinstance(callback_result, OIDCError):
+            raise callback_result
+        userinfo = callback_result
         request.session["userinfo"] = userinfo
         user = authenticate(**userinfo)
         if user:
