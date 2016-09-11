@@ -17,7 +17,6 @@ from django.contrib.auth.views import login as auth_login_view, logout as auth_l
 from django.shortcuts import redirect, render_to_response, resolve_url
 from django.http import HttpResponseRedirect
 from django import forms
-from django.template import RequestContext
 
 from djangooidc.oidc import OIDCClients, OIDCError
 
@@ -78,8 +77,7 @@ def openid(request, op_name=None):
     # Otherwise just render the list+form.
     return render_to_response(template_name,
                               {"op_list": [i for i in settings.OIDC_PROVIDERS.keys() if i], 'dynamic': dyn,
-                               'form': form, 'ilform': ilform, "next": request.session["next"]},
-                              context_instance=RequestContext(request))
+                               'form': form, 'ilform': ilform, "next": request.session["next"]})
 
 
 # Step 4: analyze the token returned by the OP
