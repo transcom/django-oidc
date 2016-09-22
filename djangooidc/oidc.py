@@ -30,6 +30,8 @@ class Client(oic.Client):
                             client_authn_method, keyjar, verify_ssl)
         if behaviour:
             self.behaviour = behaviour
+        else:
+            self.behaviour = {}
 
     def create_authn_request(self, session, acr_value=None, **kwargs):
         session["state"] = rndstr()
@@ -41,6 +43,9 @@ class Client(oic.Client):
             "nonce": session["nonce"],
             "redirect_uri": self.registration_response["redirect_uris"][0]
         }
+
+        if acr_value is None:
+            acr_value = self.behaviour.get('acr_value')
 
         if acr_value is not None:
             request_args["acr_values"] = acr_value
@@ -142,6 +147,13 @@ class Client(oic.Client):
             logger.exception(e)
 
         super(Client, self).store_response(resp, info)
+
+    def __repr__(self):
+        return u"Client {} {} {}".format(
+            self.client_id,
+            self.client_prefs,
+            self.behaviour,
+        )
 
 
 class OIDCClients(object):
