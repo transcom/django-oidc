@@ -76,6 +76,7 @@ class Client(oic.Client):
         :param response: The URL returned by the OP
         :return:
         """
+        from oic.oauth2 import MissingEndpoint
         authresp = self.parse_response(AuthorizationResponse, response,
                                        sformat="dict", keyjar=self.keyjar)
 
@@ -123,14 +124,20 @@ class Client(oic.Client):
             except:
                 pass
 
-        inforesp = self.do_user_info_request(state=authresp["state"], method="GET")
+        try:
+            inforesp = self.do_user_info_request(state=authresp["state"], method="GET")
 
-        if isinstance(inforesp, ErrorResponse):
-            raise OIDCError("Invalid response %s." % inforesp["error"])
+            if isinstance(inforesp, ErrorResponse):
+                raise OIDCError("Invalid response %s." % inforesp["error"])
 
-        userinfo = inforesp.to_dict()
+            userinfo = inforesp.to_dict()
 
-        logger.debug("UserInfo: %s" % inforesp)
+            logger.debug("UserInfo: %s" % inforesp)
+        except MissingEndpoint as e:
+            logging.warning("Wrong OIDC provider implementation or configuration: {}; using token as userinfo source".format(
+                e
+            ))
+            userinfo = session.get('id_token', {})
 
         return userinfo
 
