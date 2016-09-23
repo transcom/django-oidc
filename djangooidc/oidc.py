@@ -5,7 +5,7 @@ from django.conf import settings
 from django.http import HttpResponseRedirect
 from oic.exception import MissingAttribute
 from oic import oic, rndstr
-from oic.oauth2 import ErrorResponse
+from oic.oauth2 import ErrorResponse, MissingEndpoint, ResponseError
 from oic.oic import ProviderConfigurationResponse, AuthorizationResponse
 from oic.oic import RegistrationResponse
 from oic.oic import AuthorizationRequest
@@ -76,9 +76,11 @@ class Client(oic.Client):
         :param response: The URL returned by the OP
         :return:
         """
-        from oic.oauth2 import MissingEndpoint
-        authresp = self.parse_response(AuthorizationResponse, response,
-                                       sformat="dict", keyjar=self.keyjar)
+        try:
+            authresp = self.parse_response(AuthorizationResponse, response,
+                                           sformat="dict", keyjar=self.keyjar)
+        except ResponseError as e:
+            return OIDCError(u"Response error: {}".format(e))
 
         if isinstance(authresp, ErrorResponse):
             if authresp["error"] == "login_required":
