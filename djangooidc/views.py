@@ -82,6 +82,13 @@ def openid(request, op_name=None):
 
 # Step 4: analyze the token returned by the OP
 def authz_cb(request):
+    op = request.session.get("op")
+    if op is None:
+        # client session has been dropped or never existed - just ask him to do it again
+        return render_to_response("djangooidc/error.html", {
+            "error": 'Wrong authentication; Please try again',
+            "callback": None
+        })
     client = CLIENTS[request.session["op"]]
     query = None
 
