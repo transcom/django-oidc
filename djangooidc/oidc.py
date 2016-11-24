@@ -273,6 +273,13 @@ class OIDCClients(object):
         return client
 
     def dynamic_client(self, userid):
+        try:
+            dyn = settings.OIDC_ALLOW_DYNAMIC_OP or False
+        except:
+            dyn = True
+        if not dyn:
+            raise Exception("No dynamic clients allowed")
+
         client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD,
                                  verify_ssl=default_ssl_check)
 
