@@ -27,13 +27,13 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
-    name='django-oidc',
+    name='django-oidc-tf',
     version=version,
     description="""A Django OpenID Connect (OIDC) authentication backend""",
     long_description=readme + '\n\n' + history,
-    author='Marc-Antoine Gouillart',
-    author_email='marsu_pilami@msn.com',
-    url='https://github.com/marcanpilami/django-oidc',
+    author='Thomas Frössman',
+    author_email='thomasf@jossystem.se',
+    url='https://github.com/thomasf/django-oidc',
     packages=[
         'djangooidc',
     ],
