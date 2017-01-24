@@ -10,6 +10,7 @@ from oic.oic import ProviderConfigurationResponse, AuthorizationResponse
 from oic.oic import RegistrationResponse
 from oic.oic import AuthorizationRequest
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
+from builtins import str
 
 __author__ = 'roland'
 
@@ -62,7 +63,7 @@ class Client(oic.Client):
         logger.info("URL: %s" % url)
         logger.debug("ht_args: %s" % ht_args)
 
-        resp = HttpResponseRedirect(unicode(url))
+        resp = HttpResponseRedirect(str(url))
         if ht_args:
             for key, value in ht_args.items():
                 resp[key] = value
