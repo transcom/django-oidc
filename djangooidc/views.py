@@ -20,8 +20,17 @@ logger = logging.getLogger(__name__)
 CLIENTS = OIDCClients(settings)
 
 
+def template_view_error(request, ctx, **kwargs):
+    return render_to_response("djangooidc/error.html", ctx)
+
+
+view_error_handler = template_view_error
+
+
 # Step 1: provider choice (form). Also - Step 2: redirect to OP. (Step 3
 # is OP business.)
+
+
 class DynamicProvider(forms.Form):
     hint = forms.CharField(
         required=True, label='OpenID Connect full login', max_length=250)
@@ -62,7 +71,7 @@ def openid(request, op_name=None):
                 request.session["op"] = client.provider_info["issuer"]
             except Exception as e:
                 logger.exception("could not create OOID client")
-                return render_to_response("djangooidc/error.html", {"error": e})
+                return view_error_handler(request, {"error": e})
     else:
         form = DynamicProvider()
 
@@ -72,7 +81,7 @@ def openid(request, op_name=None):
         try:
             return client.create_authn_request(request.session)
         except Exception as e:
-            return render_to_response("djangooidc/error.html", {"error": e})
+            return view_error_handler(request, {"error": e})
 
     # Otherwise just render the list+form.
     return render_to_response(template_name,
@@ -86,7 +95,7 @@ def authz_cb(request):
     if op is None:
         # client session has been dropped or never existed - just ask him to do
         # it again
-        return render_to_response("djangooidc/error.html", {
+        return view_error_handler(request, {
             "error": 'Wrong authentication; Please try again',
             "callback": None
         })
@@ -107,7 +116,7 @@ def authz_cb(request):
         else:
             raise Exception('this login is not valid in this application')
     except OIDCError as e:
-        return render_to_response("djangooidc/error.html", {"error": e, "callback": query})
+        return view_error_handler(request, {"error": e, "callback": query})
 
 
 def logout(request, next_page=None):
