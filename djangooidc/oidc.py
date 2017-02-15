@@ -23,6 +23,7 @@ class OIDCError(Exception):
 
 
 class Client(oic.Client):
+
     def __init__(self, client_id=None, ca_certs=None,
                  client_prefs=None, client_authn_method=None, keyjar=None,
                  verify_ssl=True, behaviour=None):
@@ -127,7 +128,8 @@ class Client(oic.Client):
                 pass
 
         try:
-            inforesp = self.do_user_info_request(state=authresp["state"], method="GET")
+            inforesp = self.do_user_info_request(
+                state=authresp["state"], method="GET")
 
             if isinstance(inforesp, ErrorResponse):
                 raise OIDCError("Invalid response %s." % inforesp["error"])
@@ -166,6 +168,7 @@ class Client(oic.Client):
 
 
 class OIDCClients(object):
+
     def __init__(self, config):
         """
 
@@ -290,7 +293,8 @@ class OIDCClients(object):
             # Gather OP information
             _pcr = client.provider_config(issuer)
             # register the client
-            client.register(_pcr["registration_endpoint"], **self.config.OIDC_DYNAMIC_CLIENT_REGISTRATION_DATA)
+            client.register(_pcr["registration_endpoint"], **
+                            self.config.OIDC_DYNAMIC_CLIENT_REGISTRATION_DATA)
             try:
                 client.behaviour.update(**self.config.OIDC_DEFAULT_BEHAVIOUR)
             except KeyError:

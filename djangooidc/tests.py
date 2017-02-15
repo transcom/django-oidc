@@ -8,6 +8,7 @@ from djangooidc.views import *  # NOQA
 
 
 class SmokeImportTest(TestCase):
+
     def test_smoke_import(self):
         # pass if imports on module level are fine
         return
