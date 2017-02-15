@@ -1,6 +1,19 @@
 # coding: utf-8
 
 import logging
+
+from django import forms
+from django.conf import settings
+from django.contrib.auth import logout as auth_logout
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import login as auth_login_view
+from django.contrib.auth.views import logout as auth_logout_view
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect, render_to_response, resolve_url
+
+from djangooidc.oidc import OIDCClients, OIDCError
+
 try:
     # py3
     from urllib.parse import parse_qs
@@ -10,15 +23,7 @@ except ImportError:
     from urlparse import parse_qs
     from urllib import urlencode
 
-from django.conf import settings
-from django.contrib.auth import logout as auth_logout, authenticate, login
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.views import login as auth_login_view, logout as auth_logout_view
-from django.shortcuts import redirect, render_to_response, resolve_url
-from django.http import HttpResponseRedirect
-from django import forms
 
-from djangooidc.oidc import OIDCClients, OIDCError
 
 logger = logging.getLogger(__name__)
 

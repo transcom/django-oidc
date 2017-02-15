@@ -1,16 +1,15 @@
 # coding: utf-8
 import logging
+from builtins import str
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from oic.exception import MissingAttribute
 from oic import oic, rndstr
+from oic.exception import MissingAttribute
 from oic.oauth2 import ErrorResponse, MissingEndpoint, ResponseError
-from oic.oic import ProviderConfigurationResponse, AuthorizationResponse
-from oic.oic import RegistrationResponse
-from oic.oic import AuthorizationRequest
+from oic.oic import (AuthorizationRequest, AuthorizationResponse,
+                     ProviderConfigurationResponse, RegistrationResponse)
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
-from builtins import str
 
 __author__ = 'roland'
 
