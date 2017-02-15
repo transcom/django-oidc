@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import logging
+from urllib.parse import parse_qs, urlencode
 
 from django import forms
 from django.conf import settings
@@ -13,16 +14,6 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render_to_response, resolve_url
 
 from djangooidc.oidc import OIDCClients, OIDCError
-
-try:
-    # py3
-    from urllib.parse import parse_qs
-    from urllib.parse import urlencode
-except ImportError:
-    # py2
-    from urlparse import parse_qs
-    from urllib import urlencode
-
 
 logger = logging.getLogger(__name__)
 
