@@ -14,9 +14,13 @@ Quickstart
 
 Install djangooidc::
 
+    # Latest (pre) release
+    pip install django-oidc-tf
+
+
     # Latest code - unstable!
     pip install git+https://github.com/thomasf/django-oidc.git
-    
+
 
 Then to use it in a Django project, add this to your urls.py::
 
