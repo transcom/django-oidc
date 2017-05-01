@@ -1,5 +1,6 @@
 # coding: utf-8
 import logging
+import sys
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
@@ -16,6 +17,12 @@ __author__ = 'roland'
 logger = logging.getLogger(__name__)
 
 default_ssl_check = getattr(settings, 'OIDC_VERIFY_SSL', True)
+
+
+if sys.version_info[0] >= 3:
+    struicode = str
+else:
+    struicode = unicode
 
 
 class OIDCError(Exception):
@@ -62,7 +69,7 @@ class Client(oic.Client):
         logger.info("URL: %s" % url)
         logger.debug("ht_args: %s" % ht_args)
 
-        resp = HttpResponseRedirect(unicode(url))
+        resp = HttpResponseRedirect(struicode(url))
         if ht_args:
             for key, value in ht_args.items():
                 resp[key] = value
@@ -312,3 +319,4 @@ class OIDCClients(object):
 
     def keys(self):
         return self.client.keys()
+
