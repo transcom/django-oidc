@@ -40,7 +40,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'django>=1.10',
-        'oic>=0.7.6',
+        'oic>=0.10.0',
     ],
     license="Apache Software License",
     zip_safe=False,
