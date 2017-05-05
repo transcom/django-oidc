@@ -103,7 +103,7 @@ def authz_cb(request):
     query = None
 
     try:
-        query = parse_qs(request.META['QUERY_STRING'])
+        query = parse_qs(request.GET.urlencode())
         callback_result = client.callback(query, request.session)
         if isinstance(callback_result, OIDCError):
             raise callback_result
