@@ -33,7 +33,8 @@ class Client(oic.Client):
         else:
             self.behaviour = {}
 
-    def create_authn_request(self, session, *, acr_value=None, **kwargs):
+    def create_authn_request(self, session, *,
+                             acr_value=None, extra_args=None):
         session["state"] = rndstr()
         session["nonce"] = rndstr()
         request_args = {
@@ -50,14 +51,14 @@ class Client(oic.Client):
         if acr_value is not None:
             request_args["acr_values"] = acr_value
 
-        request_args.update(kwargs)
+        if extra_args is not None:
+            request_args.update(extra_args)
         cis = self.construct_AuthorizationRequest(request_args=request_args)
         logger.debug("request: %s" % cis)
 
         url, body, ht_args, cis = self.uri_and_body(AuthorizationRequest, cis,
                                                     method="GET",
-                                                    request_args=request_args)
-
+                                                    request_args=request_args,)
         logger.debug("body: %s" % body)
         logger.info("URL: %s" % url)
         logger.debug("ht_args: %s" % ht_args)
