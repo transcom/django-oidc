@@ -1,6 +1,5 @@
 # coding: utf-8
 import logging
-from builtins import str
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
