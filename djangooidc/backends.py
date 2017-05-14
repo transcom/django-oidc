@@ -52,7 +52,7 @@ class OpenIdConnectBackend(ModelBackend):
                     'defaults': openid_data, }
             user, created = UserModel.objects.update_or_create(**args)
             if created:
-                user = self.configure_user(user)
+                user = self.configure_user(user, **kwargs)
         else:
             try:
                 user = UserModel.objects.get_by_natural_key(username)
