@@ -10,7 +10,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import login as auth_login_view
 from django.contrib.auth.views import logout as auth_logout_view
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
+
 from django.shortcuts import redirect, render_to_response, resolve_url
 
 from djangooidc.oidc import OIDCClients, OIDCError
@@ -60,7 +61,11 @@ def openid(request, op_name=None):
     # Try to find an OP client either from the form or from the op_name URL
     # argument
     if request.method == 'GET' and op_name is not None:
-        client = CLIENTS[op_name]
+        try:
+            client = CLIENTS[op_name]
+        except KeyError as e:
+            logger.info(str(e))
+            raise Http404("OIDC client not found")
         request.session["op"] = op_name
 
     if request.method == 'POST' and dyn:

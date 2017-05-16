@@ -281,7 +281,7 @@ class OIDCClients(object):
         except:
             dyn = True
         if not dyn:
-            raise Exception("No dynamic clients allowed")
+            raise KeyError("No dynamic clients allowed")
 
         client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD,
                                  verify_ssl=default_ssl_check)
