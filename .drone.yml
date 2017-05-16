@@ -28,9 +28,6 @@ pipeline:
 
   pypi:
     image: thomasf/twine
-    environment:
-      - TWINE_USERNAME=thomasf
-      - TWINE_PASSWORD=error
     commands:
       - twine upload dist/*
     secrets: [ twine_username, twine_password ]
