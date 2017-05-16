@@ -10,10 +10,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import login as auth_login_view
 from django.contrib.auth.views import logout as auth_logout_view
-from django.http import HttpResponseRedirect, Http404
-
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect, render_to_response, resolve_url
-
 from djangooidc.oidc import OIDCClients, OIDCError
 
 logger = logging.getLogger(__name__)
@@ -137,10 +135,15 @@ def logout(request, next_page=None):
 
     if "op" not in request.session.keys():
         return auth_logout_view(request, next_page)
-    client = CLIENTS[request.session["op"]]
+
+    client = None
+    try:
+        client = CLIENTS[request.session["op"]]
+    except KeyError:
+        logger.info("OIDC client {} not found".format(request.session["op"]))
 
     extra_args = {}
-    if "post_logout_redirect_uris" in client.registration_response.keys() and len(
+    if client is not None and "post_logout_redirect_uris" in client.registration_response.keys() and len(
             client.registration_response["post_logout_redirect_uris"]) > 0:
         if next_page is not None:
             # First attempt a direct redirection from OP to next_page
@@ -210,7 +213,8 @@ def logout(request, next_page=None):
         auth_logout(request)
         if next_page:
             request.session['next'] = next_page
-    return HttpResponseRedirect(url)
+
+    return HttpResponseRedirect(next_page)
 
 
 def logout_cb(request):
