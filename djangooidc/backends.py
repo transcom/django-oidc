@@ -69,7 +69,7 @@ class OpenIdConnectBackend(ModelBackend):
         """
         return username
 
-    def configure_user(self, user):
+    def configure_user(self, user, **kwargs):
         """
         Configures a user after creation and returns the updated user.
 
