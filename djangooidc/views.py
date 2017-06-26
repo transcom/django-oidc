@@ -14,6 +14,8 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect, render_to_response, resolve_url
 from djangooidc.oidc import OIDCClients, OIDCError
 
+from . import exceptions
+
 logger = logging.getLogger(__name__)
 
 CLIENTS = OIDCClients(settings)
@@ -117,7 +119,8 @@ def authz_cb(request):
             login(request, user)
             return redirect(request.session.get("next", "/"))
         else:
-            raise Exception('this login is not valid in this application')
+            raise exceptions.AuthenticationFailed(
+                'this login is not valid in this application')
     except OIDCError as e:
         return view_error_handler(request, {"error": e, "callback": query})
 

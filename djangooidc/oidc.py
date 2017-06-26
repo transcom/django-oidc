@@ -10,6 +10,8 @@ from oic.oic import (AuthorizationRequest, AuthorizationResponse,
                      ProviderConfigurationResponse, RegistrationResponse)
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 
+from . import exceptions
+
 __author__ = 'roland'
 
 logger = logging.getLogger(__name__)
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 default_ssl_check = getattr(settings, 'OIDC_VERIFY_SSL', True)
 
 
-class OIDCError(Exception):
+class OIDCError(exceptions.OIDCException):
     pass
 
 
