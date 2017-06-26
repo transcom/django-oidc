@@ -33,7 +33,7 @@ setup(
     long_description=readme + '\n\n' + history,
     author='Thomas Frössman',
     author_email='thomasf@jossystem.se',
-    url='https://github.com/thomasf/django-oidc',
+    url='https://github.com/py-pa/django-oidc',
     packages=[
         'djangooidc',
     ],
