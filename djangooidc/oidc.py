@@ -124,11 +124,11 @@ class Client(oic.Client):
             if session['id_token']:
                 session['id_token_raw'] = getattr(self, 'id_token_raw', None)
             session['access_token'] = atresp['access_token']
-            try:
-                session['refresh_token'] = atresp['refresh_token']
-            except:
-                pass
-
+            for k in ['refresh_token', 'expires_in']:
+                try:
+                    session[k] = atresp[k]
+                except:
+                    session[k] = ""
         try:
             inforesp = self.do_user_info_request(
                 state=authresp["state"], method="GET")
