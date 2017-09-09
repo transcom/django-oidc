@@ -42,7 +42,7 @@ class Client(oic.Client):
         else:
             self.behaviour = {}
 
-    def create_authn_request(self, session, *,
+    def create_authn_request(self, session,  # *, - let's not use this fancy py3 thing for compatibility
                              acr_value=None, extra_args=None):
         session["state"] = rndstr()
         session["nonce"] = rndstr()

@@ -1,7 +1,12 @@
 # coding: utf-8
 
 import logging
-from urllib.parse import parse_qs, urlencode
+try:
+    from urllib.parse import parse_qs, urlencode
+except ImportError:
+    from urllib import urlencode
+    from urlparse import parse_qs
+
 
 from django import forms
 from django.conf import settings
