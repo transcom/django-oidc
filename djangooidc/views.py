@@ -1,38 +1,46 @@
 # coding: utf-8
 
 import logging
-try:
-    # py3
-    from urllib.parse import parse_qs
-    from urllib.parse import urlencode
-except ImportError:
-    # py2
-    from urlparse import parse_qs
-    from urllib import urlencode
+from urllib.parse import parse_qs, urlencode
 
-from django.conf import settings
-from django.contrib.auth import logout as auth_logout, authenticate, login
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.views import login as auth_login_view, logout as auth_logout_view
-from django.shortcuts import redirect, render_to_response, resolve_url
-from django.http import HttpResponseRedirect
 from django import forms
-
+from django.conf import settings
+from django.contrib.auth import logout as auth_logout
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import login as auth_login_view
+from django.contrib.auth.views import logout as auth_logout_view
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import redirect, render_to_response, resolve_url
 from djangooidc.oidc import OIDCClients, OIDCError
+
+from . import exceptions
 
 logger = logging.getLogger(__name__)
 
 CLIENTS = OIDCClients(settings)
 
 
-# Step 1: provider choice (form). Also - Step 2: redirect to OP. (Step 3 is OP business.)
+def template_view_error(request, ctx, **kwargs):
+    return render_to_response("djangooidc/error.html", ctx)
+
+
+view_error_handler = template_view_error
+
+
+# Step 1: provider choice (form). Also - Step 2: redirect to OP. (Step 3
+# is OP business.)
+
+
 class DynamicProvider(forms.Form):
-    hint = forms.CharField(required=True, label='OpenID Connect full login', max_length=250)
+    hint = forms.CharField(
+        required=True, label='OpenID Connect full login', max_length=250)
 
 
 def openid(request, op_name=None):
     client = None
-    request.session["next"] = request.GET["next"] if "next" in request.GET.keys() else "/"
+    request.session["next"] = request.GET[
+        "next"] if "next" in request.GET.keys() else "/"
     try:
         dyn = settings.OIDC_ALLOW_DYNAMIC_OP or False
     except:
@@ -50,9 +58,14 @@ def openid(request, op_name=None):
     else:
         ilform = AuthenticationForm()
 
-    # Try to find an OP client either from the form or from the op_name URL argument
+    # Try to find an OP client either from the form or from the op_name URL
+    # argument
     if request.method == 'GET' and op_name is not None:
-        client = CLIENTS[op_name]
+        try:
+            client = CLIENTS[op_name]
+        except KeyError as e:
+            logger.info(str(e))
+            raise Http404("OIDC client not found")
         request.session["op"] = op_name
 
     if request.method == 'POST' and dyn:
@@ -63,16 +76,17 @@ def openid(request, op_name=None):
                 request.session["op"] = client.provider_info["issuer"]
             except Exception as e:
                 logger.exception("could not create OOID client")
-                return render_to_response("djangooidc/error.html", {"error": e})
+                return view_error_handler(request, {"error": e})
     else:
         form = DynamicProvider()
 
-    # If we were able to determine the OP client, just redirect to it with an authentication request
+    # If we were able to determine the OP client, just redirect to it with an
+    # authentication request
     if client:
         try:
             return client.create_authn_request(request.session)
         except Exception as e:
-            return render_to_response("djangooidc/error.html", {"error": e})
+            return view_error_handler(request, {"error": e})
 
     # Otherwise just render the list+form.
     return render_to_response(template_name,
@@ -84,8 +98,9 @@ def openid(request, op_name=None):
 def authz_cb(request):
     op = request.session.get("op")
     if op is None:
-        # client session has been dropped or never existed - just ask him to do it again
-        return render_to_response("djangooidc/error.html", {
+        # client session has been dropped or never existed - just ask him to do
+        # it again
+        return view_error_handler(request, {
             "error": 'Wrong authentication; Please try again',
             "callback": None
         })
@@ -93,7 +108,7 @@ def authz_cb(request):
     query = None
 
     try:
-        query = parse_qs(request.META['QUERY_STRING'])
+        query = parse_qs(request.GET.urlencode())
         callback_result = client.callback(query, request.session)
         if isinstance(callback_result, OIDCError):
             raise callback_result
@@ -104,15 +119,18 @@ def authz_cb(request):
             login(request, user)
             return redirect(request.session.get("next", "/"))
         else:
-            raise Exception('this login is not valid in this application')
+            raise exceptions.AuthenticationFailed(
+                'this login is not valid in this application')
     except OIDCError as e:
         logging.getLogger('djangooidc.views.authz_cb').exception('Problem logging user in')
-        return render_to_response("djangooidc/error.html", {"error": e, "callback": query})
+        # return render_to_response("djangooidc/error.html", {"error": e, "callback": query})
+        return view_error_handler(request, {"error": e, "callback": query})
 
 
 def logout(request, next_page=None):
     # User is by default NOT redirected to the app - it stays on an OP page after logout.
-    # Here we determine if a redirection to the app was asked for and is possible.
+    # Here we determine if a redirection to the app was asked for and is
+    # possible.
     if next_page is None and "next" in request.GET.keys():
         next_page = request.GET['next']
     if next_page is None and "next" in request.session.keys():
@@ -122,31 +140,40 @@ def logout(request, next_page=None):
 
     if "op" not in request.session.keys():
         return auth_logout_view(request, next_page)
-    client = CLIENTS[request.session["op"]]
+
+    client = None
+    try:
+        client = CLIENTS[request.session["op"]]
+    except KeyError:
+        logger.info("OIDC client {} not found".format(request.session["op"]))
 
     extra_args = {}
-    if "post_logout_redirect_uris" in client.registration_response.keys() and len(
+    if client is not None and "post_logout_redirect_uris" in client.registration_response.keys() and len(
             client.registration_response["post_logout_redirect_uris"]) > 0:
         if next_page is not None:
             # First attempt a direct redirection from OP to next_page
             next_page_url = resolve_url(next_page)
-            urls = [url for url in client.registration_response["post_logout_redirect_uris"] if next_page_url in url]
+            urls = [url for url in client.registration_response[
+                "post_logout_redirect_uris"] if next_page_url in url]
             if len(urls) > 0:
                 extra_args["post_logout_redirect_uri"] = urls[0]
             else:
                 # It is not possible to directly redirect from the OP to the page that was asked for.
-                # We will try to use the redirection point - if the redirection point URL is registered that is.
+                # We will try to use the redirection point - if the redirection
+                # point URL is registered that is.
                 next_page_url = resolve_url('openid_logout_cb')
                 urls = [url for url in client.registration_response["post_logout_redirect_uris"] if
                         next_page_url in url]
                 if len(urls) > 0:
                     extra_args["post_logout_redirect_uri"] = urls[0]
                 else:
-                    # Just take the first registered URL as a desperate attempt to come back to the application
+                    # Just take the first registered URL as a desperate attempt
+                    # to come back to the application
                     extra_args["post_logout_redirect_uri"] = client.registration_response["post_logout_redirect_uris"][
                         0]
     else:
-        # No post_logout_redirect_uris registered at the OP - no redirection to the application is possible anyway
+        # No post_logout_redirect_uris registered at the OP - no redirection to
+        # the application is possible anyway
         pass
 
     # Redirect client to the OP logout page
@@ -163,7 +190,8 @@ def logout(request, next_page=None):
                 'id_token_hint': request.session['access_token'],
                 'state': request.session['state'],
             }
-            request_args.update(extra_args)  # should include the post_logout_redirect_uri
+            # should include the post_logout_redirect_uri
+            request_args.update(extra_args)
 
             url = client.provider_info['end_session_endpoint']
             url += "?" + urlencode(request_args)
@@ -185,11 +213,13 @@ def logout(request, next_page=None):
             return resp
             """
     finally:
-        # Always remove Django session stuff - even if not logged out from OP. Don't wait for the callback as it may never come.
+        # Always remove Django session stuff - even if not logged out from OP.
+        # Don't wait for the callback as it may never come.
         auth_logout(request)
         if next_page:
             request.session['next'] = next_page
-    return HttpResponseRedirect(url)
+
+    return HttpResponseRedirect(next_page)
 
 
 def logout_cb(request):

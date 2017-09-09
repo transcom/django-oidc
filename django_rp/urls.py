@@ -1,9 +1,10 @@
-from django.conf.urls import patterns, include, url
+from os import path
+
+from django.conf.urls import include, patterns, url
 from django.contrib import admin
 
 admin.autodiscover()
 
-from os import path
 
 BASEDIR = path.dirname(path.abspath(__file__))
 

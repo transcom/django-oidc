@@ -7,14 +7,20 @@ Behind the scenes, it uses Roland Hedberg's great pyoidc library.
 
 Modified by JHUAPL BOSS to support Python3
 
+Modified by Thomas Frössman with fixes and additional modifications.
+
 Quickstart
 ----------
 
 Install djangooidc::
 
+    # Latest (pre) release
+    pip install django-oidc-tf
+
+
     # Latest code - unstable!
-    pip install git+https://github.com/jhuapl-boss/django-oidc.git
-    
+    pip install git+https://github.com/thomasf/django-oidc.git
+
 
 Then to use it in a Django project, add this to your urls.py::
 

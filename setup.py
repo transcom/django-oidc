@@ -27,20 +27,20 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
-    name='django-oidc',
+    name='django-oidc-tf',
     version=version,
     description="""A Django OpenID Connect (OIDC) authentication backend""",
     long_description=readme + '\n\n' + history,
-    author='Marc-Antoine Gouillart',
-    author_email='marsu_pilami@msn.com',
-    url='https://github.com/marcanpilami/django-oidc',
+    author='Thomas Frössman',
+    author_email='thomasf@jossystem.se',
+    url='https://github.com/py-pa/django-oidc',
     packages=[
         'djangooidc',
     ],
     include_package_data=True,
     install_requires=[
-        'django>=1.8',
-        'oic>=0.7.6',
+        'django>=1.10',
+        'oic>=0.10.0',
     ],
     license="Apache Software License",
     zip_safe=False,
@@ -53,6 +53,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
     ],
 )
