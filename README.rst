@@ -14,17 +14,14 @@ Quickstart
 
 Install djangooidc::
 
-    # Latest (pre) release
-    pip install django-oidc-tf
-
-
     # Latest code - unstable!
-    pip install git+https://github.com/thomasf/django-oidc.git
+    pip install git+https://github.com/{desiredforkname}/django-oidc.git
 
+(replace {desiredforkname} by the github username; find the fork which suit your needs, or just copy the name from your browser location field).
 
 Then to use it in a Django project, add this to your urls.py::
 
-    url(r'openid/', include('djangooidc.urls')),
+    url(r'^openid/', include('djangooidc.urls')),
 
 
 Then add the following items to your settings.py:
