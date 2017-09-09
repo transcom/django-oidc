@@ -1,7 +1,9 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+
 import datetime
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
@@ -26,7 +28,8 @@ class OpenIdConnectBackend(ModelBackend):
         if 'upn' in kwargs.keys():
             username = kwargs['upn']
 
-        # Some OP may actually choose to withhold some information, so we must test if it is present
+        # Some OP may actually choose to withhold some information, so we must
+        # test if it is present
         openid_data = {'last_login': datetime.datetime.now()}
         if 'first_name' in kwargs.keys():
             openid_data['first_name'] = kwargs['first_name']
@@ -45,10 +48,11 @@ class OpenIdConnectBackend(ModelBackend):
         # instead we use get_or_create when creating unknown users since it has
         # built-in safeguards for multiple threads.
         if getattr(settings, 'OIDC_CREATE_UNKNOWN_USER', True):
-            args = {UserModel.USERNAME_FIELD: username, 'defaults': openid_data, }
+            args = {UserModel.USERNAME_FIELD: username,
+                    'defaults': openid_data, }
             user, created = UserModel.objects.update_or_create(**args)
             if created:
-                user = self.configure_user(user)
+                user = self.configure_user(user, **kwargs)
         else:
             try:
                 user = UserModel.objects.get_by_natural_key(username)
@@ -65,7 +69,7 @@ class OpenIdConnectBackend(ModelBackend):
         """
         return username
 
-    def configure_user(self, user):
+    def configure_user(self, user, **kwargs):
         """
         Configures a user after creation and returns the updated user.
 

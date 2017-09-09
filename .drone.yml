@@ -1,0 +1,46 @@
+pipeline:
+  restore-cache:
+    image: drillster/drone-volume-cache
+    restore: true
+    mount:
+      - cache
+      - .tox
+    volumes:
+      - /tmp/drone-cache:/cache
+
+  build:
+    image: python:3.5
+    commands:
+      - mkdir -p cache/pip
+      - pip -q install --upgrade --cache-dir cache/pip tox flake8
+      - tox -e py35-django110
+      # - flake8 --config=.flake8rc
+      # - "isort -df -c -rc"
+
+  dist:
+    image: python:3.5
+    commands:
+      - '[ "${DRONE_TAG##v}" = "$$(python setup.py -V)" ]'
+      - python setup.py sdist bdist_wheel
+    when:
+      event: tag
+      tag: v*
+
+  pypi:
+    image: thomasf/twine
+    commands:
+      - twine upload dist/*
+    secrets: [ twine_username, twine_password ]
+    when:
+      event: tag
+      tag: v*
+
+
+  rebuild-cache:
+    image: drillster/drone-volume-cache
+    rebuild: true
+    mount:
+      - cache
+      - .tox
+    volumes:
+      - /tmp/drone-cache:/cache

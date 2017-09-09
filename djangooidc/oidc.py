@@ -1,16 +1,22 @@
 # coding: utf-8
+from __future__ import unicode_literals
+
 import logging
-import sys
+try:
+    from builtins import unicode as str
+except ImportError:
+    pass
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from oic.exception import MissingAttribute
 from oic import oic, rndstr
+from oic.exception import MissingAttribute
 from oic.oauth2 import ErrorResponse, MissingEndpoint, ResponseError
-from oic.oic import ProviderConfigurationResponse, AuthorizationResponse
-from oic.oic import RegistrationResponse
-from oic.oic import AuthorizationRequest
+from oic.oic import (AuthorizationRequest, AuthorizationResponse,
+                     ProviderConfigurationResponse, RegistrationResponse)
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
+
+from . import exceptions
 
 __author__ = 'roland'
 
@@ -19,17 +25,12 @@ logger = logging.getLogger(__name__)
 default_ssl_check = getattr(settings, 'OIDC_VERIFY_SSL', True)
 
 
-if sys.version_info[0] >= 3:
-    struicode = str
-else:
-    struicode = unicode
-
-
-class OIDCError(Exception):
+class OIDCError(exceptions.OIDCException):
     pass
 
 
 class Client(oic.Client):
+
     def __init__(self, client_id=None, ca_certs=None,
                  client_prefs=None, client_authn_method=None, keyjar=None,
                  verify_ssl=True, behaviour=None):
@@ -40,7 +41,8 @@ class Client(oic.Client):
         else:
             self.behaviour = {}
 
-    def create_authn_request(self, session, acr_value=None, **kwargs):
+    def create_authn_request(self, session,  # *, - let's not use this fancy py3 thing for compatibility
+                             acr_value=None, extra_args=None):
         session["state"] = rndstr()
         session["nonce"] = rndstr()
         request_args = {
@@ -57,19 +59,19 @@ class Client(oic.Client):
         if acr_value is not None:
             request_args["acr_values"] = acr_value
 
-        request_args.update(kwargs)
+        if extra_args is not None:
+            request_args.update(extra_args)
         cis = self.construct_AuthorizationRequest(request_args=request_args)
         logger.debug("request: %s" % cis)
 
         url, body, ht_args, cis = self.uri_and_body(AuthorizationRequest, cis,
                                                     method="GET",
-                                                    request_args=request_args)
-
+                                                    request_args=request_args,)
         logger.debug("body: %s" % body)
         logger.info("URL: %s" % url)
         logger.debug("ht_args: %s" % ht_args)
 
-        resp = HttpResponseRedirect(struicode(url))
+        resp = HttpResponseRedirect(str(url))
         if ht_args:
             for key, value in ht_args.items():
                 resp[key] = value
@@ -128,13 +130,14 @@ class Client(oic.Client):
             if session['id_token']:
                 session['id_token_raw'] = getattr(self, 'id_token_raw', None)
             session['access_token'] = atresp['access_token']
-            try:
-                session['refresh_token'] = atresp['refresh_token']
-            except:
-                pass
-
+            for k in ['refresh_token', 'expires_in']:
+                try:
+                    session[k] = atresp[k]
+                except:
+                    session[k] = ""
         try:
-            inforesp = self.do_user_info_request(state=authresp["state"], method="GET")
+            inforesp = self.do_user_info_request(
+                state=authresp["state"], method="GET")
 
             if isinstance(inforesp, ErrorResponse):
                 raise OIDCError("Invalid response %s." % inforesp["error"])
@@ -173,6 +176,7 @@ class Client(oic.Client):
 
 
 class OIDCClients(object):
+
     def __init__(self, config):
         """
 
@@ -285,7 +289,7 @@ class OIDCClients(object):
         except:
             dyn = True
         if not dyn:
-            raise Exception("No dynamic clients allowed")
+            raise KeyError("No dynamic clients allowed")
 
         client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD,
                                  verify_ssl=default_ssl_check)
@@ -297,7 +301,8 @@ class OIDCClients(object):
             # Gather OP information
             _pcr = client.provider_config(issuer)
             # register the client
-            client.register(_pcr["registration_endpoint"], **self.config.OIDC_DYNAMIC_CLIENT_REGISTRATION_DATA)
+            client.register(_pcr["registration_endpoint"], **
+                            self.config.OIDC_DYNAMIC_CLIENT_REGISTRATION_DATA)
             try:
                 client.behaviour.update(**self.config.OIDC_DEFAULT_BEHAVIOUR)
             except KeyError:
@@ -319,4 +324,3 @@ class OIDCClients(object):
 
     def keys(self):
         return self.client.keys()
-
