@@ -1,20 +1,18 @@
 # coding: utf-8
-
 from __future__ import unicode_literals
-
-import datetime
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
+from django.utils import timezone
 
 
 class OpenIdConnectBackend(ModelBackend):
     """
     This backend checks a previously performed OIDC authentication.
     If it is OK and the user already exists in the database, it is returned.
-    If it is OK and user does not exist in the database, it is created and returned unless setting
-        OIDC_CREATE_UNKNOWN_USER is False.
+    If it is OK and user does not exist in the database, it is created and
+        returned unless setting OIDC_CREATE_UNKNOWN_USER is False.
     In all other cases, None is returned.
     """
 
@@ -30,7 +28,7 @@ class OpenIdConnectBackend(ModelBackend):
 
         # Some OP may actually choose to withhold some information, so we must
         # test if it is present
-        openid_data = {'last_login': datetime.datetime.now()}
+        openid_data = {'last_login': timezone.now()}
         if 'first_name' in kwargs.keys():
             openid_data['first_name'] = kwargs['first_name']
         if 'given_name' in kwargs.keys():
