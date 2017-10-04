@@ -15,6 +15,7 @@ from oic.oauth2 import ErrorResponse, MissingEndpoint, ResponseError
 from oic.oic import (AuthorizationRequest, AuthorizationResponse,
                      ProviderConfigurationResponse, RegistrationResponse)
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
+from oic.utils import keyio
 
 from . import exceptions
 
@@ -217,6 +218,11 @@ class OIDCClients(object):
             verify_ssl = default_ssl_check
         except:
             verify_ssl = True
+
+        if "keyset_jwk_file" in _key_set:
+            print("Found keyset_jwk_file")
+            key_bundle = keyio.keybundle_from_local_file(kwargs["keyset_jwk_file"])
+            args["keyjar"] =keyio.KeyJar(verify_ssl=verify_ssl,key_bundle=key_bundle)
 
         client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD,
                                  behaviour=kwargs["behaviour"], verify_ssl=verify_ssl, **args)
