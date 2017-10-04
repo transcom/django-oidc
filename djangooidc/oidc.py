@@ -219,10 +219,14 @@ class OIDCClients(object):
         except:
             verify_ssl = True
 
-        if "keyset_jwk_file" in _key_set:
-            print("Found keyset_jwk_file")
-            key_bundle = keyio.keybundle_from_local_file(kwargs["keyset_jwk_file"])
-            args["keyjar"] =keyio.KeyJar(verify_ssl=verify_ssl,key_bundle=key_bundle)
+        # Check to see if there is a keyset specified in the client_registration (if it is a client_registration type)
+        #   This gets used if the authentication method is "private_key_jwt
+        if "client_registration" in _key_set:
+            if "keyset_jwk_file" in kwargs["client_registration"].keys():
+                key_bundle = keyio.keybundle_from_local_file(kwargs["client_registration"]["keyset_jwk_file"],"jwk","sig")
+                key_jar =keyio.KeyJar(verify_ssl=verify_ssl)
+                key_jar.add_kb("",key_bundle)
+                args["keyjar"] = key_jar
 
         client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD,
                                  behaviour=kwargs["behaviour"], verify_ssl=verify_ssl, **args)
