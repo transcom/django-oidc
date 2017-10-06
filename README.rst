@@ -69,6 +69,26 @@ For example, an Azure AD OP would be::
 You may now test the authentication by going to (on the development server) http://localhost:8000/openid/login or to any
 of your views that requires authentication.
 
+Using a private key jwt for client authentication
+-------------------------------------------------
+If you are using private keys for client authentication with the OP, you can specify it like::
+
+    OIDC_PROVIDERS = {
+        "mitreid": {
+            "srv_discovery_url": "https://mitreid.org/",
+            "behaviour": OIDC_DEFAULT_BEHAVIOUR,
+            "client_registration": {
+                "client_id": "your_client_id",
+                "redirect_uris": ["http://localhost:8000/openid/callback/login/"],
+                'token_endpoint_auth_method': ['private_key_jwt'],
+                "enc_kid": "rsa_test",
+                "keyset_jwk_file": "file://keys/keyset.jwk"
+            }
+        }
+    }
+
+In this case keys/keyset.jwk is the full keyset (public and private keys) used when registering the client with the OP
+manually. (I.E. you've provided the OP with the public key.)
 
 Features
 --------
