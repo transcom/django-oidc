@@ -13,7 +13,8 @@ from oic import oic, rndstr
 from oic.exception import MissingAttribute
 from oic.oauth2 import ErrorResponse, MissingEndpoint, ResponseError
 from oic.oic import (AuthorizationRequest, AuthorizationResponse,
-                     ProviderConfigurationResponse, RegistrationResponse)
+                     RegistrationResponse)
+from oic.oic.message import ProviderConfigurationResponse
 from oic.utils.authn.client import CLIENT_AUTHN_METHOD
 from oic.utils import keyio
 
@@ -35,8 +36,7 @@ class Client(oic.Client):
     def __init__(self, client_id=None, ca_certs=None,
                  client_prefs=None, client_authn_method=None, keyjar=None,
                  verify_ssl=True, behaviour=None):
-        oic.Client.__init__(self, client_id, ca_certs, client_prefs,
-                            client_authn_method, keyjar, verify_ssl)
+        oic.Client.__init__(self, client_id=client_id, client_authn_method=client_authn_method, keyjar=keyjar, verify_ssl=verify_ssl, config=client_prefs)
         if behaviour:
             self.behaviour = behaviour
         else:
@@ -44,8 +44,8 @@ class Client(oic.Client):
 
     def create_authn_request(self, session,  # *, - let's not use this fancy py3 thing for compatibility
                              acr_value=None, extra_args=None):
-        session["state"] = rndstr()
-        session["nonce"] = rndstr()
+        session["state"] = rndstr(size=32)
+        session["nonce"] = rndstr(size=32)
         request_args = {
             "response_type": self.behaviour["response_type"],
             "scope": self.behaviour["scope"],

@@ -16,7 +16,7 @@ class OpenIdConnectBackend(ModelBackend):
     In all other cases, None is returned.
     """
 
-    def authenticate(self, **kwargs):
+    def authenticate(self, request, **kwargs):
         user = None
         if not kwargs or 'sub' not in kwargs.keys():
             return user
@@ -55,7 +55,10 @@ class OpenIdConnectBackend(ModelBackend):
             try:
                 user = UserModel.objects.get_by_natural_key(username)
             except UserModel.DoesNotExist:
-                return None
+                try:
+                    user = UserModel.objects.get(email=kwargs['email'])
+                except UserModel.DoesNotExist:
+                    return None
         return user
 
     def clean_username(self, username):
@@ -73,4 +76,5 @@ class OpenIdConnectBackend(ModelBackend):
 
         By default, returns the user unmodified.
         """
+        user.set_unusable_password()
         return user

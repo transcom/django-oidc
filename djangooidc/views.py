@@ -13,8 +13,8 @@ from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.views import login as auth_login_view
-from django.contrib.auth.views import logout as auth_logout_view
+from django.contrib.auth import login as auth_login_view
+from django.contrib.auth import logout as auth_logout_view
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import redirect, render_to_response, resolve_url
 from djangooidc.oidc import OIDCClients, OIDCError
@@ -89,7 +89,10 @@ def openid(request, op_name=None):
     # authentication request
     if client:
         try:
-            return client.create_authn_request(request.session)
+            acrvalue = None
+            if 'acr_value' in settings.OIDC_PROVIDERS[op_name]['client_registration']:
+                acrvalue = settings.OIDC_PROVIDERS[op_name]['client_registration']['acr_value']
+            return client.create_authn_request(request.session, acr_value=acrvalue)
         except Exception as e:
             return view_error_handler(request, {"error": e})
 
