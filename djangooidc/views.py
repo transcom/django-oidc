@@ -191,11 +191,11 @@ def logout(request, next_page=None):
         # the user should be directed to the OIDC provider to logout after being
         # logged out here.
 
-        if 'access_token' in request.session and 'state' in request.session:
+        if 'id_token_raw' in request.session and 'state' in request.session:
             # TODO: determine if OIDC was used to login by some better way
 
             request_args = {
-                'id_token_hint': request.session['access_token'],
+                'id_token_hint': request.session['id_token_raw'],
                 'state': request.session['state'],
             }
             # should include the post_logout_redirect_uri
