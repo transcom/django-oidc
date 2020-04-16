@@ -227,6 +227,11 @@ class OIDCClients(object):
                 key_jar =keyio.KeyJar(verify_ssl=verify_ssl)
                 key_jar.add_kb("",key_bundle)
                 args["keyjar"] = key_jar
+            if "keyset_jwk_dict" in kwargs["client_registration"].keys():
+                kc_rsa = keyio.KeyBundle(kwargs["client_registration"]['keyset_jwk_dict'])
+                key_jar =keyio.KeyJar(verify_ssl=verify_ssl)
+                key_jar.add_kb("",kc_rsa)
+                args["keyjar"] = key_jar
 
         client = self.client_cls(client_authn_method=CLIENT_AUTHN_METHOD,
                                  behaviour=kwargs["behaviour"], verify_ssl=verify_ssl, **args)
